@@ -8,6 +8,13 @@ from lightning.pytorch.callbacks import (  # noqa
     ModelCheckpoint,
 )
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # .env 파일에서 환경변수 로드
+except ImportError:
+    pass
+
 sys.path.append(os.getcwd())
 from ocr.lightning_modules import get_pl_modules_by_cfg  # noqa: E402
 
