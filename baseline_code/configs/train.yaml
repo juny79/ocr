@@ -6,9 +6,15 @@ defaults:
 
 seed: 42
 exp_name: "ocr_training"
-project_name: "OCRProject"
+project_name: "ocr-receipt-detection"
 
 wandb: False
+wandb_config:
+  project: "ocr-receipt-detection"
+  entity: null  # 사용자 이름 (선택사항)
+  tags: ["baseline", "dbnet"]
+  notes: "Receipt Text Detection with DBNet"
+  
 exp_version: "v1.0"
 
 resume: null

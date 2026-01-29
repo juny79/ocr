@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 import lightning.pytorch as pl
 import hydra
 from lightning.pytorch.callbacks import (  # noqa
@@ -27,10 +28,18 @@ def train(config):
 
     if config.get("wandb"):
         from lightning.pytorch.loggers import WandbLogger as Logger  # noqa: E402
-        logger = Logger(config.exp_name,
-                        project=config.project_name,
-                        config=dict(config),
-                        )
+        import wandb  # noqa: E402
+        
+        # W&B 실험 고유 이름 생성
+        exp_name = f"exp_{datetime.now().strftime('%Y%m%d_%H%M')}"
+        
+        logger = Logger(
+            project=config.project_name,
+            name=exp_name,
+            config=dict(config),
+            log_model=True,  # 모델 저장
+            tags=["baseline", "dbnet"],
+        )
     else:
         from lightning.pytorch.loggers.tensorboard import TensorBoardLogger  # noqa: E402
         logger = TensorBoardLogger(
