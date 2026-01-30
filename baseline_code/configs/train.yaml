@@ -11,7 +11,7 @@ project_name: "ocr-receipt-detection"
 wandb: False
 wandb_config:
   project: "ocr-receipt-detection"
-  entity: null  # 사용자 이름 (선택사항)
+  entity: "quriquri7"  # 사용자 이름
   tags: ["baseline", "dbnet"]
   notes: "Receipt Text Detection with DBNet"
   

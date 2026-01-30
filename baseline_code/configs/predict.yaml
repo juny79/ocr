@@ -7,5 +7,5 @@ defaults:
 seed: 42
 exp_name: "ocr_training"
 
-checkpoint_path: null
+checkpoint_path: "outputs/ocr_training/checkpoints/epoch=8-step=1845.ckpt"
 minified_json: False

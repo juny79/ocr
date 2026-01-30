@@ -26,7 +26,7 @@ wandb login
 
 # API Key 입력 (위에서 확인한 키)
 # 또는 환경 변수로 설정
-export WANDB_API_KEY="your-api-key"
+export WANDB_API_KEY="..."
 ```
 
 ### Step 3: 설정 파일 수정
