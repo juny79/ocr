@@ -68,4 +68,14 @@ multirun/
 
 # Environment
 .env
+.env.example
 .envrc
+
+# SSH Keys & Secrets
+.ssh/
+.bash_history
+.bashrc
+.gitconfig
+.cache/
+.vim/
+.viminfo
