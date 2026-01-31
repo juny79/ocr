@@ -6,6 +6,7 @@ import hydra
 from lightning.pytorch.callbacks import (  # noqa
     LearningRateMonitor,
     ModelCheckpoint,
+    EarlyStopping,
 )
 
 # Load environment variables from .env file
@@ -61,7 +62,8 @@ def train(config):
     callbacks = [
         LearningRateMonitor(logging_interval='step'),
         ModelCheckpoint(dirpath=checkpoint_path,
-                        save_top_k=3, monitor='val/loss', mode='min'),
+                        save_top_k=3, monitor='val/hmean', mode='max'),
+        EarlyStopping(monitor='val/hmean', patience=5, mode='max', verbose=True),
     ]
 
     trainer = pl.Trainer(
