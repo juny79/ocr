@@ -1,0 +1,73 @@
+# WandB Sweep - EfficientNet-B4 Focused Optimization
+# Goal: 96.00% → 96.50% (Precision 개선 중심)
+# Strategy: Postprocessing 최적화 + Learning Rate 미세조정
+
+program: runners/train.py
+method: bayes
+metric:
+  name: val/hmean
+  goal: maximize
+
+parameters:
+  # Fixed parameters
+  preset:
+    value: efficientnet_b4_aggressive
+  exp_name:
+    value: efficientnet_b4_sweep_focused
+  wandb:
+    value: true
+  trainer.max_epochs:
+    value: 20  # 22 대신 20 (빠른 반복)
+  
+  # === Critical Parameters (High Impact) ===
+  
+  # Postprocessing - Threshold (Most Important!)
+  # 높일수록 Precision↑, Recall↓
+  # 현재 0.22 → 0.23-0.26 탐색
+  models.head.thresh:
+    distribution: uniform
+    min: 0.20
+    max: 0.28
+  
+  # Postprocessing - Box Threshold
+  # 높일수록 신뢰도 낮은 박스 제거 (Precision↑)
+  models.head.box_thresh:
+    distribution: uniform
+    min: 0.22
+    max: 0.32
+  
+  # Learning Rate
+  # 현재 0.0003 기준, 범위 축소
+  models.optimizer.lr:
+    distribution: log_uniform_values
+    min: 0.0002
+    max: 0.0006
+  
+  # === Secondary Parameters (Medium Impact) ===
+  
+  # Weight Decay (Overfitting 방지)
+  models.optimizer.weight_decay:
+    distribution: log_uniform_values
+    min: 0.00005
+    max: 0.0005
+  
+  # Scheduler T_max
+  models.scheduler.T_max:
+    values: [18, 20, 22]
+  
+  # Max Candidates (너무 많으면 FP 증가)
+  models.head.max_candidates:
+    values: [500, 600, 700]
+
+# Early Termination - 빠른 수렴
+early_terminate:
+  type: hyperband
+  min_iter: 8  # Epoch 8부터 평가
+  eta: 2
+  s: 2
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args_no_hyphens}

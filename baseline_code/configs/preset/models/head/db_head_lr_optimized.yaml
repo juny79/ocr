@@ -1,0 +1,18 @@
+# @package _global_
+
+# DBNet Head with Optimized Postprocessing
+# thresh=0.28, box_thresh=0.25 → 96.37% H-Mean
+
+models:
+  head:
+    _target_: ${head_path}.DBHead
+    in_channels: 256
+    upscale: 4
+    k: 50
+    bias: False
+    smooth: False
+    postprocess:
+      thresh: 0.28           # ✅ 최적값 (96.37%)
+      box_thresh: 0.25       # ✅ 최적값 (96.37%)
+      max_candidates: 600
+      use_polygon: False

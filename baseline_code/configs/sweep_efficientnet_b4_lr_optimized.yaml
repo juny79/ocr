@@ -1,0 +1,61 @@
+# WandB Sweep - EfficientNet-B4 Learning Rate Optimization
+# Goal: 96.37% → 96.50%+ (Postprocessing 최적화 완료)
+# Strategy: LR, Weight Decay 중심 최적화
+
+program: runners/train.py
+method: bayes
+metric:
+  name: val/hmean
+  goal: maximize
+
+parameters:
+  # Fixed parameters
+  preset:
+    value: efficientnet_b4_lr_optimized
+  exp_name:
+    value: efficientnet_b4_sweep_lr
+  wandb:
+    value: true
+  trainer.max_epochs:
+    value: 22
+  
+  # Fixed Postprocessing (최적값 고정)
+  models.head.postprocess.thresh:
+    value: 0.28  # 96.37% 달성한 최적값
+  models.head.postprocess.box_thresh:
+    value: 0.25  # 96.37% 달성한 최적값
+  models.head.postprocess.max_candidates:
+    value: 600
+  
+  # === Critical: Learning Rate (가장 중요!) ===
+  models.optimizer.lr:
+    distribution: log_uniform_values
+    min: 0.00025
+    max: 0.0006
+  
+  # === Important: Weight Decay ===
+  models.optimizer.weight_decay:
+    distribution: log_uniform_values
+    min: 0.00005
+    max: 0.0005
+  
+  # === Secondary: Scheduler Parameters ===
+  models.scheduler.T_max:
+    values: [20, 22, 24]
+  
+  models.scheduler.eta_min:
+    distribution: log_uniform_values
+    min: 0.000005
+    max: 0.00005
+
+early_terminate:
+  type: hyperband
+  min_iter: 10
+  eta: 2
+  s: 2
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args_no_hyphens}

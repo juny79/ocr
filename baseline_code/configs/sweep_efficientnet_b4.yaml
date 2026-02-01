@@ -1,0 +1,85 @@
+# WandB Sweep Configuration for EfficientNet-B4 Hyperparameter Optimization
+# OCR Receipt Detection - DBNet with EfficientNet-B4 Backbone
+
+program: runners/train.py
+method: bayes  # Bayesian optimization for efficient search
+metric:
+  name: val/hmean
+  goal: maximize
+
+parameters:
+  # Fixed parameters
+  preset:
+    value: efficientnet_b4_aggressive
+  exp_name:
+    value: efficientnet_b4_sweep
+  wandb:
+    value: true
+  trainer.max_epochs:
+    value: 22
+  
+  # Learning Rate Search (Most critical for EfficientNet)
+  models.optimizer.lr:
+    distribution: log_uniform_values
+    min: 0.0001
+    max: 0.001
+  
+  # Weight Decay (Regularization)
+  models.optimizer.weight_decay:
+    distribution: log_uniform_values
+    min: 0.00001
+    max: 0.001
+  
+  # Scheduler T_max (CosineAnnealing cycle length)
+  models.scheduler.T_max:
+    values: [18, 20, 22, 24]
+  
+  # Scheduler eta_min (Minimum learning rate)
+  models.scheduler.eta_min:
+    distribution: log_uniform_values
+    min: 0.000001
+    max: 0.0001
+  
+  # Postprocessing - Threshold (Most impactful)
+  models.head.thresh:
+    distribution: uniform
+    min: 0.18
+    max: 0.26
+  
+  # Postprocessing - Box Threshold
+  models.head.box_thresh:
+    distribution: uniform
+    min: 0.20
+    max: 0.30
+  
+  # Postprocessing - Max Candidates
+  models.head.max_candidates:
+    values: [500, 600, 700, 800]
+  
+  # Data Augmentation - Rotation
+  transforms.train_transform.transforms[2].limit:
+    values: [8, 10, 12, 15]
+  
+  # Data Augmentation - Brightness/Contrast
+  transforms.train_transform.transforms[4].brightness_limit:
+    distribution: uniform
+    min: 0.2
+    max: 0.4
+  
+  # Data Augmentation - Noise probability
+  transforms.train_transform.transforms[6].p:
+    distribution: uniform
+    min: 0.2
+    max: 0.5
+
+early_terminate:
+  type: hyperband
+  min_iter: 10
+  eta: 2
+  s: 3
+
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args_no_hyphens}

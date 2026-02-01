@@ -1,0 +1,12 @@
+# @package _global_
+
+# EfficientNet-B4 LR Optimized Preset
+# Postprocessing: thresh=0.28, box_thresh=0.25 (96.37% 달성)
+# Next: Learning Rate 최적화
+
+defaults:
+  - base
+  - /preset/datasets/db_augmented_resnet50
+  - /preset/models/model_efficientnet_b4_lr_optimized
+  - /preset/lightning_modules/base
+  - _self_

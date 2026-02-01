@@ -1,0 +1,21 @@
+# @package _global_
+
+# EfficientNet-B4 Model with Optimized Postprocessing
+# thresh=0.28, box_thresh=0.25 → 96.37% H-Mean
+
+defaults:
+  - /preset/models/decoder/unet_efficientnet_b4
+  - /preset/models/encoder/timm_backbone_efficientnet_b4
+  - /preset/models/head/db_head_lr_optimized
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.0004  # 0.0003 → 0.0004 (Sweep으로 최적화 예정)
+    weight_decay: 0.0001
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 22
+    eta_min: 0.00001
