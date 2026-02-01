@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - base
+  - /preset/datasets/db_augmented_resnet50
+  - /preset/models/model_resnet50_aggressive
+  - /preset/lightning_modules/base
+  - _self_
+
+# Override for Fold 4
+data:
+  train_json_path: /data/ephemeral/home/baseline_code/kfold_results_v2/fold_4/train.json
+  val_json_path: /data/ephemeral/home/baseline_code/kfold_results_v2/fold_4/val.json
