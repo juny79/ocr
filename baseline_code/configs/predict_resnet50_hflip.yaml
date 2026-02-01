@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+  - preset: predict_hflip
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+seed: 42
+exp_name: "resnet50_hflip_predict"
+
+checkpoint_path: "outputs/resnet50_fold0/checkpoints/epoch=19-step=14700.ckpt"
+minified_json: False

@@ -55,6 +55,8 @@ checkpoints/
 submissions/
 wandb/
 lightning_logs/
+*.csv
+*.json
 
 # Hydra
 .hydra/

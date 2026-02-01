@@ -1,0 +1,90 @@
+# @package _global_
+
+dataset_base_path: "/data/ephemeral/home/data/datasets/"
+
+datasets:
+  train_dataset:
+    _target_: ${dataset_path}.OCRDataset
+    image_path: ${dataset_base_path}images/all
+    annotation_path: ${dataset_base_path}jsons/train.json
+    transform: ${transforms.test_transform}
+  val_dataset:
+    _target_: ${dataset_path}.OCRDataset
+    image_path: ${dataset_base_path}images/all
+    annotation_path: ${dataset_base_path}jsons/val.json
+    transform: ${transforms.test_transform}
+  test_dataset:
+    _target_: ${dataset_path}.OCRDataset
+    image_path: ${dataset_base_path}images/all
+    annotation_path: ${dataset_base_path}jsons/val.json
+    transform: ${transforms.test_transform}
+  predict_dataset:
+    _target_: ${dataset_path}.OCRDataset
+    image_path: ${dataset_base_path}images/test
+    annotation_path: null
+    transform: ${transforms.test_transform_flip}
+
+transforms:
+  test_transform:
+    _target_: ${dataset_path}.DBTransforms
+    transforms:
+      - _target_: albumentations.LongestMaxSize
+        max_size: 960
+        p: 1.0
+      - _target_: albumentations.PadIfNeeded
+        min_width: 960
+        min_height: 960
+        border_mode: 0
+        p: 1.0
+      - _target_: albumentations.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+    keypoint_params:
+      _target_: albumentations.KeypointParams
+      format: 'xy'
+      remove_invisible: True
+  
+  test_transform_flip:
+    _target_: ${dataset_path}.DBTransforms
+    transforms:
+      - _target_: albumentations.HorizontalFlip
+        p: 1.0
+      - _target_: albumentations.LongestMaxSize
+        max_size: 960
+        p: 1.0
+      - _target_: albumentations.PadIfNeeded
+        min_width: 960
+        min_height: 960
+        border_mode: 0
+        p: 1.0
+      - _target_: albumentations.Normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+    keypoint_params:
+      _target_: albumentations.KeypointParams
+      format: 'xy'
+      remove_invisible: True
+
+dataloaders:
+  train_dataloader:
+    batch_size: 4
+    shuffle: True
+    num_workers: 4
+  val_dataloader:
+    batch_size: 4
+    shuffle: False
+    num_workers: 4
+  test_dataloader:
+    batch_size: 4
+    shuffle: False
+    num_workers: 4
+  predict_dataloader:
+    batch_size: 1
+    shuffle: False
+    num_workers: 4
+
+collate_fn:
+  _target_: ${dataset_path}.DBCollateFN
+  shrink_ratio: 0.4
+  thresh_min: 0.3
+  thresh_max: 0.7

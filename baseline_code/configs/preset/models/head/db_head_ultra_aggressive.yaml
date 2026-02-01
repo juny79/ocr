@@ -1,0 +1,15 @@
+# @package _global_
+
+models:
+  head:
+    _target_: ${head_path}.DBHead
+    in_channels: 256
+    upscale: 4
+    k: 50
+    bias: False
+    smooth: False
+    postprocess:
+      thresh: 0.20           # 0.22 → 0.20 (더 공격적)
+      box_thresh: 0.23       # 0.25 → 0.23
+      max_candidates: 700    # 600 → 700
+      use_polygon: False
