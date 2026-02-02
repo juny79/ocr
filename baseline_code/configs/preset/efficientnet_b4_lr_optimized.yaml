@@ -1,7 +1,7 @@
 # @package _global_
 
 # EfficientNet-B4 LR Optimized Preset
-# Postprocessing: thresh=0.28, box_thresh=0.25 (96.37% 달성)
+# Postprocessing: thresh=0.29, box_thresh=0.25 (96.53% 달성) ⭐ UPDATED
 # Next: Learning Rate 최적화
 
 defaults:

@@ -1,0 +1,10 @@
+# @package _global_
+defaults:
+  - base
+  - /preset/datasets/db_augmented_resnet50
+  - /preset/models/decoder/unet_efficientnet_b4
+  - /preset/models/encoder/timm_backbone_efficientnet_b4
+  - /preset/models/head/test_t030_b025
+  - /preset/models/loss/db_loss
+  - /preset/lightning_modules/base
+  - _self_

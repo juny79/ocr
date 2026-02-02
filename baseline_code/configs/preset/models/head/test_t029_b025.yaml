@@ -1,0 +1,10 @@
+# @package _global_
+
+# Test: thresh=0.29, box_thresh=0.25
+
+models:
+  head:
+    postprocess:
+      thresh: 0.29
+      box_thresh: 0.25
+      max_candidates: 600
