@@ -1,0 +1,12 @@
+# @package _global_
+
+# ConvNeXt-Tiny Hybrid Preset
+defaults:
+  - base
+  - /preset/datasets/db_augmented_resnet50
+  - /preset/models/model_convnext_tiny_hybrid
+  - /preset/lightning_modules/base
+  - _self_
+
+exp_name: convnext_tiny_hybrid_progressive
+seed: 42
