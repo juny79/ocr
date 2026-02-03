@@ -1,0 +1,19 @@
+# @package _global_
+
+# ConvNeXt-Small Hybrid Model
+defaults:
+  - /preset/models/decoder/unet_convnext_small
+  - /preset/models/encoder/timm_backbone_convnext_small
+  - /preset/models/head/db_head_lr_optimized
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.00045
+    weight_decay: 0.000085
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 20
+    eta_min: 0.000008

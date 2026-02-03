@@ -1,0 +1,8 @@
+# @package _global_
+
+models:
+  encoder:
+    _target_: ${encoder_path}.TimmBackbone
+    model_name: 'convnext_small'
+    select_features: [0, 1, 2, 3]
+    pretrained: true
