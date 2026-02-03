@@ -1,0 +1,22 @@
+# @package _global_
+
+# EfficientNet-B3 Hybrid Model with Progressive Resolution
+# Initial: 640px (epoch 0-3) → 960px (epoch 4+)
+# Mixed Precision + Early Stopping
+
+defaults:
+  - /preset/models/decoder/unet_efficientnet_b3
+  - /preset/models/encoder/timm_backbone_efficientnet_b3
+  - /preset/models/head/db_head_lr_optimized
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.00045                          # Hybrid 중간값
+    weight_decay: 0.000085               # Hybrid 중간값
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 20                            # 단축된 주기
+    eta_min: 0.000008                    # Hybrid 중간값

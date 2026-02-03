@@ -1,0 +1,17 @@
+# @package _global_
+
+# EfficientNet-B3 Hybrid Preset with Progressive Resolution
+# Features:
+# - Mixed Precision Training (FP16)
+# - Early Stopping (patience=5)
+# - Progressive Resolution: 640px → 960px (epoch 4+)
+# - Hybrid LR parameters
+
+defaults:
+  - base
+  - /preset/datasets/db_augmented_resnet50
+  - /preset/models/model_efficientnet_b3_hybrid
+  - /preset/lightning_modules/base
+  - _self_
+
+exp_name: efficientnet_b3_hybrid_progressive
