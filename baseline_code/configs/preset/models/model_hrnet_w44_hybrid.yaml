@@ -1,0 +1,26 @@
+# @package _global_
+
+# HRNet-W44 Hybrid Model
+# Parameters: ~67M (larger than ConvNeXt-Small's 50M)
+# Optimized based on previous experiments:
+#   - Small dataset (2.6K images) → moderate regularization
+#   - ConvNeXt-Small failed with wd=0.00012 (too strong)
+#   - ConvNeXt-Tiny succeeded with wd=0.000085 (optimal)
+#   - For HRNet-W44 (67M): use wd=0.0001 (between Tiny and failed Small)
+
+defaults:
+  - /preset/models/decoder/unet_hrnet_w44
+  - /preset/models/encoder/timm_backbone_hrnet_w44
+  - /preset/models/head/db_head_lr_optimized
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.00045             # Same as Tiny's success (HRNet's implicit regularization enables this)
+    weight_decay: 0.000082  # Lower than Tiny (0.000085) - HRNet's multi-resolution provides structural regularization
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 20
+    eta_min: 0.000008
