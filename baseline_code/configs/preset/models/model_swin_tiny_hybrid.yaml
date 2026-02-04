@@ -1,0 +1,30 @@
+# @package _global_
+
+# Swin Transformer Tiny Hybrid Model
+# Parameters: 27.5M (similar to ConvNeXt-Tiny)
+# 
+# Parameter Strategy:
+# - lr: 0.00045 (proven optimal for ~28M models)
+# - weight_decay: 0.00006 (lighter than ConvNeXt-Tiny's 0.000085)
+#   Rationale: Self-attention provides implicit regularization
+#   Transformer's layer normalization offers stable training
+#   Avoid over-regularization like ConvNeXt-Small failure
+# 
+# Expected Performance: 96.2-96.4% LB (similar to ConvNeXt-Tiny)
+
+defaults:
+  - /preset/models/decoder/unet_swin_tiny
+  - /preset/models/encoder/timm_backbone_swin_tiny
+  - /preset/models/head/db_head_lr_optimized
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.00045             # Same as Tiny/HRNet success
+    weight_decay: 0.00006   # Lighter than ConvNeXt-Tiny (trust self-attention)
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 20
+    eta_min: 0.000008

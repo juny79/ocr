@@ -1,0 +1,8 @@
+# @package _global_
+
+models:
+  encoder:
+    _target_: ${encoder_path}.TimmBackbone
+    model_name: 'swin_tiny_patch4_window7_224'
+    select_features: [0, 1, 2, 3]            # Output layer
+    pretrained: true

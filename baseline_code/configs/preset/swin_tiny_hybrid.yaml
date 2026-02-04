@@ -1,0 +1,16 @@
+# @package _global_
+
+# Swin Transformer Tiny Hybrid Preset
+defaults:
+  - base
+  - /preset/datasets/db_augmented_resnet50
+  - /preset/models/model_swin_tiny_hybrid
+  - /preset/lightning_modules/base
+  - _self_
+
+exp_name: swin_tiny_hybrid_progressive
+seed: 42
+
+wandb: true
+wandb_project: ocr-swin-tiny-experiment
+wandb_run_name: swin_tiny_fold0_wd0.00006

@@ -102,158 +102,160 @@ class ProgressiveResolutionCallback(pl.Callback):
             self.switched = True
 
 
-@hydra.main(version_base="1.2", config_path="../configs", config_name="train")
-def main(cfg: DictConfig) -> None:
-    print("=" * 80)
-    print("SWIN TRANSFORMER TINY TRAINING")
-    print("=" * 80)
-    print(f"Model: Swin Transformer Tiny (27.5M parameters)")
-    print(f"Strategy: Lighter weight decay (0.00006) for Transformer architecture")
-    print(f"Learning Rate: {cfg.models.optimizer.lr}")
-    print(f"Weight Decay: {cfg.models.optimizer.weight_decay}")
-    print(f"Progressive Resolution: 640px → 960px at epoch 4")
-    print(f"Expected LB: 96.2-96.4% H-Mean")
-    print("=" * 80)
+@hydra.main(config_path=CONFIG_DIR, config_name='train', version_base='1.2')
+def main(config):
+    print("="*80)
+    print("🚀 Swin Transformer Tiny Training - Fold 0")
+    print("="*80)
+    print("\n📋 Configuration:")
+    print(f"  • Model: Swin Transformer Tiny (27.5M parameters)")
+    print(f"  • LR: {config.models.optimizer.lr}")
+    print(f"  • Weight Decay: {config.models.optimizer.weight_decay}")
+    print(f"  • T_Max: {config.models.scheduler.T_max}")
+    print(f"  • eta_min: {config.models.scheduler.eta_min}")
+    print(f"  • Precision: FP32")
+    print(f"  • Early Stopping: patience=5")
+    print(f"  • Progressive Resolution: 640px → 960px (epoch 4+)")
+    print("\n💡 Strategy:")
+    print(f"  • Lighter weight decay (wd=0.00006) for Transformer")
+    print(f"  • Self-attention provides implicit regularization")
+    print(f"  • Layer normalization ensures stable training")
+    print("="*80 + "\n")
     
-    # Set random seed
-    pl.seed_everything(cfg.get('seed', 42), workers=True)
+    # Override with Fold 0 data paths
+    fold_idx = 0
+    kfold_dir = Path("/data/ephemeral/home/data/datasets/jsons/kfold")
+    train_json = kfold_dir / f"fold{fold_idx}_train.json"
+    val_json = kfold_dir / f"fold{fold_idx}_val.json"
     
-    # Setup WandB logger
-    wandb_logger = None
-    if cfg.get('wandb', False):
-        wandb_logger = WandbLogger(
-            project=cfg.get('wandb_project', 'ocr-swin-tiny'),
-            name=cfg.get('wandb_run_name', 'swin_tiny_fold0'),
-            save_dir=cfg.output_dir
+    if not train_json.exists() or not val_json.exists():
+        print(f"❌ Fold {fold_idx} data not found!")
+        print(f"   Looking for: {train_json}")
+        sys.exit(1)
+    
+    print(f"📂 Using Fold {fold_idx} data:")
+    print(f"  • Train: {train_json}")
+    print(f"  • Val: {val_json}\n")
+    
+    # Override annotation paths
+    OmegaConf.set_struct(config, False)
+    config.datasets.train_dataset.annotation_path = str(train_json)
+    config.datasets.val_dataset.annotation_path = str(val_json)
+    config.exp_name = f"{config.exp_name}_fold0"
+    
+    # Seed
+    pl.seed_everything(config.get("seed", 42), workers=True)
+    
+    # Get model and data modules using existing infrastructure
+    print("🔧 Initializing model and data modules...")
+    model_module, data_module = get_pl_modules_by_cfg(config)
+    
+    # Logger
+    if config.get("wandb"):
+        from lightning.pytorch.loggers import WandbLogger as Logger
+        import wandb
+        import os
+        
+        # Force offline mode to avoid API permission issues
+        os.environ['WANDB_MODE'] = 'offline'
+        
+        exp_name = f"swin_tiny_optimized_fold0_{datetime.now().strftime('%Y%m%d_%H%M')}"
+        project = "swin-tiny-ocr-fold0"
+        
+        print(f"📊 WandB Configuration (OFFLINE MODE):")
+        print(f"  • Project: {project}")
+        print(f"  • Experiment: {exp_name}")
+        print(f"  • Mode: OFFLINE - logs will be saved locally\n")
+        
+        logger = Logger(
+            project=project,
+            name=exp_name,
+            config=dict(config),
+            log_model=False,
+            tags=["swin_tiny", "transformer", "fold0", "progressive_res", "wd_0.00006"],
+        )
+    else:
+        from lightning.pytorch.loggers.tensorboard import TensorBoardLogger
+        logger = TensorBoardLogger(
+            save_dir=config.log_dir,
+            name=f"{config.exp_name}_fold0",
+            version=config.exp_version,
+            default_hp_metric=False,
         )
     
-    # Datasets
-    print("\n[1/5] Loading datasets...")
-    train_dataset, val_dataset = get_train_datasets(
-        data_dir=cfg.dataset.data_dir,
-        split_method=cfg.dataset.split_method,
-        fold=cfg.dataset.fold,
-        train_transform_cfg=cfg.dataset.train_transform,
-        val_transform_cfg=cfg.dataset.val_transform
-    )
-    print(f"  Train: {len(train_dataset)} samples")
-    print(f"  Val: {len(val_dataset)} samples")
-    
-    # Lightning Module
-    print("\n[2/5] Initializing Swin Transformer Tiny model...")
-    model = OCRLightningModule(cfg)
-    print(f"  Encoder: {cfg.models.encoder.name}")
-    print(f"  Channels: {cfg.models.decoder.in_channels}")
-    print(f"  Optimizer: Adam (lr={cfg.models.optimizer.lr}, wd={cfg.models.optimizer.weight_decay})")
-    
     # Callbacks
-    print("\n[3/5] Setting up callbacks...")
-    callbacks = []
+    checkpoint_path = Path(config.checkpoint_dir) / f"fold_{fold_idx}"
+    checkpoint_path.mkdir(parents=True, exist_ok=True)
     
-    # Checkpoint callback - save best model based on val/hmean
-    checkpoint_dir = os.path.join(cfg.output_dir, "checkpoints", f"fold_{cfg.dataset.fold}")
-    os.makedirs(checkpoint_dir, exist_ok=True)
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=checkpoint_dir,
-        filename="best-{epoch:02d}-{val/hmean:.4f}",
-        monitor="val/hmean",
-        mode="max",
-        save_top_k=1,
-        save_last=True,
-        verbose=True
-    )
-    callbacks.append(checkpoint_callback)
-    print(f"  Checkpoint: {checkpoint_dir}")
-    
-    # Early stopping - stop if no improvement for 5 epochs
-    early_stop_callback = EarlyStopping(
-        monitor="val/hmean",
-        patience=5,
-        mode="max",
-        verbose=True,
-        min_delta=0.0001
-    )
-    callbacks.append(early_stop_callback)
-    print(f"  Early Stopping: patience=5, monitor=val/hmean")
-    
-    # Learning rate monitor
-    if wandb_logger:
-        lr_monitor = LearningRateMonitor(logging_interval='epoch')
-        callbacks.append(lr_monitor)
-    
-    # Progressive resolution callback - switch from 640 to 960 at epoch 4
-    progressive_callback = ProgressiveResolutionCallback(
-        switch_epoch=4,
-        low_res_size=(640, 640),
-        high_res_size=(960, 960)
-    )
-    callbacks.append(progressive_callback)
-    print(f"  Progressive Resolution: 640x640 → 960x960 at epoch 4")
+    callbacks = [
+        LearningRateMonitor(logging_interval='epoch'),
+        ModelCheckpoint(
+            dirpath=str(checkpoint_path),
+            filename='best-{epoch:02d}-{val/hmean:.4f}',
+            save_top_k=3,
+            monitor='val/hmean',
+            mode='max',
+            save_last=True,
+            verbose=True
+        ),
+        EarlyStopping(
+            monitor='val/hmean',
+            patience=5,
+            mode='max',
+            verbose=True,
+            min_delta=0.0001
+        ),
+        ProgressiveResolutionCallback(
+            switch_epoch=4,
+            initial_size=640,
+            target_size=960
+        )
+    ]
     
     # Trainer
-    print("\n[4/5] Initializing trainer...")
+    print("🔧 Configuring Trainer...")
+    
+    # Override trainer config for optimization
+    OmegaConf.set_struct(config, False)
+    config.trainer.precision = '32'  # Use FP32
+    config.trainer.gradient_clip_val = 1.0
+    config.trainer.benchmark = True
+    
+    print("  • Precision: FP32")
+    print("  • Progressive Resolution: 640→960 @ epoch 4")
+    print("  • Early Stopping: patience=5\n")
+    
     trainer = pl.Trainer(
-        max_epochs=cfg.trainer.max_epochs,
-        accelerator='gpu',
-        devices=1,
-        precision=cfg.trainer.precision,
-        gradient_clip_val=cfg.trainer.get('gradient_clip_val', 5.0),
-        callbacks=callbacks,
-        logger=wandb_logger,
-        deterministic=True,
-        benchmark=False,
-        log_every_n_steps=50,
-        val_check_interval=1.0,
-        enable_checkpointing=True,
-        enable_progress_bar=True,
+        **config.trainer,
+        logger=logger,
+        callbacks=callbacks
     )
-    print(f"  Max Epochs: {cfg.trainer.max_epochs}")
-    print(f"  Precision: {cfg.trainer.precision}")
-    print(f"  Gradient Clip: {cfg.trainer.get('gradient_clip_val', 5.0)}")
     
     # Train
-    print("\n[5/5] Starting training...")
-    print("=" * 80)
-    trainer.fit(model, train_dataloaders=train_dataset, val_dataloaders=val_dataset)
+    print("\n" + "="*80)
+    print("🎯 Starting Training")
+    print("="*80 + "\n")
     
-    # Training complete
-    print("\n" + "=" * 80)
-    print("TRAINING COMPLETE")
-    print("=" * 80)
-    print(f"Best checkpoint: {checkpoint_callback.best_model_path}")
-    print(f"Best val/hmean: {checkpoint_callback.best_model_score:.4f}")
-    print("=" * 80)
-    
-    # Test evaluation (using best checkpoint)
-    print("\n[BONUS] Running test evaluation with best checkpoint...")
-    best_model = OCRLightningModule.load_from_checkpoint(
-        checkpoint_callback.best_model_path,
-        cfg=cfg,
-        strict=False
+    trainer.fit(
+        model_module,
+        data_module,
+        ckpt_path=config.get("resume", None),
     )
     
-    # Load test dataset with same validation transform
-    from ocr.datasets import get_test_datasets
-    test_dataset = get_test_datasets(
-        data_dir=cfg.dataset.data_dir,
-        transform_cfg=cfg.dataset.val_transform  # Use val transform for test
-    )
+    # Test
+    print("\n" + "="*80)
+    print("📊 Running Final Test")
+    print("="*80 + "\n")
+    trainer.test(model_module, data_module)
     
-    test_results = trainer.test(best_model, dataloaders=test_dataset)
-    
-    print("\n" + "=" * 80)
-    print("TEST RESULTS")
-    print("=" * 80)
-    if test_results:
-        for key, value in test_results[0].items():
-            print(f"  {key}: {value:.4f}")
-    print("=" * 80)
-    print("\nNext steps:")
-    print("1. Check test/hmean - should be 96.0-96.3%")
-    print("2. If test looks good, generate submission file")
-    print("3. Submit to leaderboard - expect 96.2-96.4% LB")
-    print("4. Consider 5-fold ensemble with HRNet-W44 (different architectures)")
-    print("=" * 80)
+    # Summary
+    print("\n" + "="*80)
+    print("✅ Training Completed!")
+    print("="*80)
+    best_hmean = trainer.callback_metrics.get('val/hmean', 0)
+    print(f"📊 Best Validation H-Mean: {best_hmean:.4f}")
+    print(f"📁 Checkpoints: {checkpoint_path}")
+    print("="*80 + "\n")
 
 
 if __name__ == "__main__":
