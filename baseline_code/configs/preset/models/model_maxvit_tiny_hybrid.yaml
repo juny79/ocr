@@ -1,0 +1,32 @@
+# @package _global_
+
+# MaxViT-Tiny Hybrid Model Configuration
+# Architecture: Multi-axis Attention + Convolution (Hybrid)
+# Parameters: 28.6M (similar to ConvNeXt-Tiny)
+# 
+# Parameter Strategy (Architecture-Aware):
+# - lr: 0.00045 (proven optimal for ~28M models from Tiny/HRNet)
+# - weight_decay: 0.000085 (ConvNeXt-Tiny confirmed value)
+#   Rationale: MaxViT has hybrid architecture (Attention + Conv)
+#   Similar implicit regularization to ConvNeXt but with multi-axis attention
+#   Can use same strategy as Tiny since param count is similar
+# 
+# Expected Performance: 96.1-96.3% LB (similar to ConvNeXt-Tiny: 96.25%)
+# Advantages: Flexible resolution support (no fixed input size constraint)
+
+defaults:
+  - /preset/models/decoder/unet_maxvit_tiny
+  - /preset/models/encoder/timm_backbone_maxvit_tiny
+  - /preset/models/head/db_head_maxvit_tiny
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.00045             # Proven optimal (same as Tiny, HRNet)
+    weight_decay: 0.000085  # Tiny's validated value
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 20
+    eta_min: 0.000008

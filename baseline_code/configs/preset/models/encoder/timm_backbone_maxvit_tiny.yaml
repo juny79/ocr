@@ -1,0 +1,8 @@
+# @package _global_
+
+models:
+  encoder:
+    _target_: ${encoder_path}.TimmBackbone
+    model_name: 'maxvit_tiny_rw_256'
+    select_features: [0, 1, 2, 3]            # Use first 4 levels (like HRNet)
+    pretrained: false

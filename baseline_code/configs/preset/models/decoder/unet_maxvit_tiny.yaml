@@ -1,0 +1,10 @@
+# @package _global_
+
+models:
+  decoder:
+    _target_: ${decoder_path}.UNet
+    in_channels: [64, 64, 128, 256]  # MaxViT-Tiny first 4 feature levels
+    strides: [2, 4, 8, 16]
+    inner_channels: 256
+    output_channels: 64
+    bias: False

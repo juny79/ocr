@@ -1,0 +1,19 @@
+# @package _global_
+
+# DBNet Head for MaxViT-Tiny
+# MaxViT-Tiny: 4 feature levels with strides [2, 4, 8, 16]
+# Decoder outputs at stride 4 → need upscale=4 for 768x768
+
+models:
+  head:
+    _target_: ${head_path}.DBHead
+    in_channels: 256
+    upscale: 4
+    k: 50
+    bias: False
+    smooth: False
+    postprocess:
+      thresh: 0.29
+      box_thresh: 0.25
+      max_candidates: 600
+      use_polygon: False

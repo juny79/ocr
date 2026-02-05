@@ -1,0 +1,16 @@
+# @package _global_
+
+# MaxViT-Tiny Hybrid Preset
+# Fixed resolution: 768x768 (MaxViT architecture constraint)
+# MaxViT has window size constraints that prevent arbitrary resolutions
+defaults:
+  - base
+  - /preset/datasets/db_fixed_maxvit_tiny
+  - /preset/models/model_maxvit_tiny_hybrid
+  - /preset/lightning_modules/base
+  - _self_
+
+exp_name: maxvit_tiny_hybrid_fixed768
+seed: 42
+
+wandb: false
