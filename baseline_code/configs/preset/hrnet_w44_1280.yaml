@@ -1,0 +1,15 @@
+# @package _global_
+
+# HRNet-W44 High Resolution (1280x1280) Preset
+defaults:
+  - base
+  - /preset/datasets/db_augmented_1280
+  - /preset/models/model_hrnet_w44_hybrid_1280
+  - /preset/lightning_modules/base
+  - _self_
+
+exp_name: hrnet_w44_1280_fold0
+seed: 42
+
+# No W&B for now
+wandb: false

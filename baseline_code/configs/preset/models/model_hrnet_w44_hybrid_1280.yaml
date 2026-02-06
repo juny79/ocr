@@ -1,0 +1,74 @@
+# @package _global_
+
+# HRNet-W44 High Resolution (1280x1280) Model Configuration
+# 
+# Memory & Parameter Analysis:
+# ================================
+# Resolution increase: 960 → 1280 (factor 1.78x)
+# Memory increase: ~1.78x
+# Batch size: 8 → 2 (960x960) → 2 (1280x1280)
+#
+# Parameter Adjustment Analysis:
+# ================================
+#
+# 1. Learning Rate: Keep 0.00045 ✅
+#    Reason: Higher resolution provides implicit regularization
+#    - Larger images capture more details
+#    - More pixels = more gradient information
+#    - Network sees more diverse patterns per image
+#    Risk: May oscillate slightly, monitor closely
+#
+# 2. Weight Decay: Reduce 0.000082 → 0.00006 ⚠️
+#    Reason: 
+#    - Higher resolution = more training data per image
+#    - Reduced effective batch size (8→2) = less gradient averaging
+#    - Need slightly weaker regularization
+#    Rationale: Similar to reducing batch size (SGD effect)
+#    
+# 3. T_max: Keep 20 ✅
+#    Reason: Training dynamics similar (just more pixels)
+#    - Early stopping will still trigger around epoch 10-12
+#
+# 4. eta_min: Keep 0.000008 ✅
+#    Reason: Final LR ratio unchanged (proportional to lr)
+#
+# 5. Batch Size: 8 → 2 ⚠️ REQUIRED
+#    Memory calculation:
+#    - 960x960: batch_size=8
+#    - 1280x1280: ~1.78x memory
+#    - max batch_size ≈ 8/1.78 ≈ 4.5 → use 2 for safety
+#    
+# 6. Gradient Accumulation: Consider adding ✅
+#    Option: gradient_accumulation: 4
+#    Effect: batch_size 2 × 4 = effective batch 8
+#    This maintains training stability
+#
+# Summary Strategy:
+# ─────────────────
+# Conservative Approach (Recommended):
+#   lr: 0.00045 (keep)
+#   weight_decay: 0.00006 (reduced from 0.000082)
+#   batch_size: 2
+#   gradient_accumulation: 4 (optional, to simulate batch 8)
+#   T_max: 20 (keep)
+#
+# If training is unstable → reduce lr to 0.00035
+# If training is too slow → increase lr to 0.0005
+
+defaults:
+  - /preset/models/decoder/unet_hrnet_w44
+  - /preset/models/encoder/timm_backbone_hrnet_w44
+  - /preset/models/head/db_head_lr_optimized
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.00045             # Keep (higher resolution provides implicit regularization)
+    weight_decay: 0.00006   # Reduce from 0.000082 (smaller batch size + higher resolution)
+    betas: [0.9, 0.999]
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 20               # Keep (early stopping around epoch 10-12)
+    eta_min: 0.000008       # Keep (proportional to lr)
