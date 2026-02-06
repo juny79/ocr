@@ -1,0 +1,59 @@
+program: runners/train.py
+project: hrnet-w44-1280-sweep
+command:
+  - ${env}
+  - python
+  - ${program}
+  - ${args_no_hyphens}
+
+method: bayes
+metric:
+  name: val/hmean
+  goal: maximize
+
+parameters:
+  # 해상도/배치 (고정)
+  preset:
+    value: hrnet_w44_1280
+
+  # Learning Rate (현재 0.00045 주변 탐색)
+  models.optimizer.lr:
+    distribution: log_uniform
+    min: -11.5  # exp(-11.5) ≈ 0.00001
+    max: -8.5   # exp(-8.5) ≈ 0.0002
+    # 현재값: 0.00045 ≈ exp(-7.7)
+    # 탐색 범위: 0.00001 ~ 0.0002
+
+  # Weight Decay (현재 0.00006 주변 탐색)
+  models.optimizer.weight_decay:
+    distribution: log_uniform
+    min: -12    # exp(-12) ≈ 0.0000061
+    max: -9     # exp(-9) ≈ 0.000123
+    # 현재값: 0.00006 ≈ exp(-9.7)
+    # 탐색 범위: 0.0000061 ~ 0.000123
+
+  # Learning Rate Scheduler T_max
+  models.scheduler.T_max:
+    values: [15, 18, 20, 25]
+    # 현재값: 20
+    # 탐색: 15, 18, 20, 25 epochs
+
+  # Learning Rate Scheduler eta_min
+  models.scheduler.eta_min:
+    distribution: log_uniform
+    min: -13    # exp(-13) ≈ 0.0000022
+    max: -10    # exp(-10) ≈ 0.000045
+    # 현재값: 0.000008 ≈ exp(-11.7)
+    # 탐색 범위: 0.0000022 ~ 0.000045
+
+  # Max Epochs
+  trainer.max_epochs:
+    value: 20
+
+  # WandB 활성화
+  wandb:
+    value: true
+
+early_terminate:
+  type: hyperband
+  min_iter: 5  # 5 epoch 이후부터 조기 종료 고려

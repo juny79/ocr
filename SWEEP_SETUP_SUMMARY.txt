@@ -1,0 +1,162 @@
+================================================================================
+                  WandB Sweep 설정 완료 - HRNet-W44 1280x1280
+================================================================================
+
+  • 리더보드 점수: H-Mean 97.14% (Precision 97.35%, Recall 97.08%)
+  • 향상도: 기준 96.44% → 97.14% (+0.70% ⬆️)
+
+  1. sweep_hrnet_w44_1280.yaml
+     - WandB Sweep 설정 파일
+     - Bayesian Optimization 설정
+     - 탐색 파라미터 범위 정의
+
+  2. start_sweep.sh
+     - Sweep 초기화 및 실행 스크립트
+     - 대화형 실행 옵션 제공
+
+  3. WANDB_SWEEP_GUIDE.md (상세 가이드)
+     - Sweep 개념 설명
+     - 파라미터별 탐색 이유
+     - 세부 설정 정보
+
+  4. SWEEP_QUICK_START.md (빠른 시작)
+     - 3단계 실행 방법
+     - 예상 시간
+     - 트러블슈팅
+
+
+  방법 1: 자동 스크립트 (권장)
+  ────────────────────────
+  cd /data/ephemeral/home/baseline_code
+  chmod +x start_sweep.sh
+  ./start_sweep.sh
+
+  → 자동으로 Sweep 초기화 + 에이전트 실행
+
+
+  방법 2: 단계별 수동 실행
+  ────────────────────────
+  # Step 1: Sweep 초기화
+  cd /data/ephemeral/home/baseline_code
+  wandb sweep sweep_hrnet_w44_1280.yaml \
+    --project hrnet-w44-1280-sweep \
+    --entity juny79
+
+  출력에서 Sweep ID 확인 (예: abc123xyz)
+
+  # Step 2: 에이전트 실행 (병렬 - 권장)
+  wandb agent juny79/hrnet-w44-1280-sweep/abc123xyz --count 8
+
+  또는 (단일 에이전트)
+  wandb agent juny79/hrnet-w44-1280-sweep/abc123xyz
+
+
+  방법 3: 여러 터미널에서 동시 실행
+  ────────────────────────────────
+  # 터미널 1, 2, 3, ... 에서 각각 실행
+  wandb agent juny79/hrnet-w44-1280-sweep/abc123xyz
+
+  → 더 빠른 병렬 처리 가능
+
+
+  Learning Rate (lr)
+    현재값: 0.00045
+    탐색범위: 0.00001 ~ 0.0002 (log scale)
+    탐색이유: 현재값이 좋으므로 주변에서 세밀한 탐색
+
+  Weight Decay (weight_decay)
+    현재값: 0.00006
+    탐색범위: 0.0000061 ~ 0.000123 (log scale)
+    탐색이유: 배치 크기 2 환경에서 정규화 강도 최적화
+
+  T_max (코사인 어닐링 사이클)
+    현재값: 20
+    탐색범위: [15, 18, 20, 25] (정수값)
+    탐색이유: 최적 학습 사이클 길이 찾기
+
+  eta_min (최소 학습율)
+    현재값: 0.000008
+    탐색범위: 0.0000022 ~ 0.000045 (log scale)
+    탐색이유: 수렴 속도와 안정성 조정
+
+
+  방법: Bayesian Optimization (베이지안 최적화)
+    - 초기 실행: 파라미터 공간 탐험
+    - 중기 실행: 좋은 영역으로 집중
+    - 후기 실행: 최고값 근처 세밀 탐색
+    - → 무작위 탐색보다 30% 이상 효율적
+
+  조기 종료: Hyperband
+    - 5 epoch마다 성능 평가
+    - 낮은 성능 조합은 자동 중단
+    - → 리소스 절약 + 빠른 수렴
+
+  목표 메트릭: val/hmean 최대화
+
+ 예상 소요 시간
+
+  Sweep 초기화: 5분
+  병렬 실행 (8개 에이전트, 각 ~45분/run): ~6시간
+  최적값 분석: 10분
+  ────────────────────
+  총 소요 시간: ~6.5시간
+
+ Sweep 완료 후 다음 단계
+
+  1. WandB Dashboard 확인
+     https://wandb.ai/juny79/hrnet-w44-1280-sweep
+     → "Best" 표시된 run의 파라미터 확인
+
+  2. 최적 파라미터로 모든 Fold 학습
+     python runners/train.py preset=hrnet_w44_1280 \
+       models.optimizer.lr=<최고값_lr> \
+       models.optimizer.weight_decay=<최고값_wd> \
+       models.scheduler.T_max=<최고값_tmax> \
+       models.scheduler.eta_min=<최고값_etamin>
+
+  3. 5-Fold 앙상블 생성
+     python scripts/ensemble_kfold.py
+
+
+  현재: H-Mean 97.14%
+  Sweep 후 예상: H-Mean 97.20% ~ 97.40%
+  향상도: +0.06% ~ +0.26%
+
+
+  1차 실행 (3-4개):
+    → 전체 파라미터 공간 샘플링
+    → 대략적인 성능 분포 파악
+
+  2차 실행 (5-6개):
+    → 좋은 영역으로 탐색 집중
+    → 낮은 성능 조합 조기 중단 시작
+
+  3차 실행 (7-8개):
+    → 최고 성능 조합 근처 세밀 탐색
+    → 수렴 확인
+
+  결과:
+    → Bayesian Optimization이 최적값에 가장 가까운 조합 제시
+
+
+  Q: 메모리 부족
+  A: wandb agent <SWEEP_ID> --count 4  (8에서 4로 감소)
+
+  Q: Sweep이 중단됨
+  A: wandb agent <SWEEP_ID> --count 4  (동일 ID로 재시작)
+
+  Q: Sweep ID를 잊었음
+  A: wandb sweeps list (이전 sweep 목록 확인)
+
+  Q: 특정 파라미터 조합만 테스트
+  A: WANDB_SWEEP_GUIDE.md의 "방법 2: 수동 실행" 참고
+
+================================================================================
+ 시작할 준비가 되었습니다!
+
+: cd /data/ephemeral/home/baseline_code && ./start_sweep.sh
+
+
+
+: cd /data/ephemeral/home/baseline_code && chmod +x start_sweep.sh && bash start_sweep.sh
+================================================================================

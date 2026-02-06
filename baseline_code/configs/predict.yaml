@@ -7,5 +7,5 @@ defaults:
 seed: 42
 exp_name: "ocr_training"
 
-checkpoint_path: "outputs/ocr_training/checkpoints/epoch=22-step=4715.ckpt"
+checkpoint_path: "outputs/hrnet_w44_1280_fold0/checkpoints/epoch=14-step=24540.ckpt"
 minified_json: False
