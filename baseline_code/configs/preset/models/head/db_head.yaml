@@ -11,7 +11,7 @@ models:
     bias: False                      # Use bias or not in LayerNorm
     smooth: False                    # Use smooth or not in Upsample
     postprocess:
-      thresh: 0.25                   # Binarization threshold (0.3 → 0.25)
-      box_thresh: 0.3                # Detection Box threshold (0.4 → 0.3)
-      max_candidates: 500            # Limit the number of detection boxes (300 → 500)
-      use_polygon: False             # Detection Box Type (QUAD or POLY)
+      thresh: 0.3                    # Binarization threshold (teammate: 0.3)
+      box_thresh: 0.4                # Detection Box threshold (teammate: 0.4)
+      max_candidates: 500            # Limit the number of detection boxes
+      use_polygon: True              # Detection Box Type (POLY - CLEval compatible)

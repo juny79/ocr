@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+  - preset: hrnet_w44_1280
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+seed: 42
+exp_name: fold_4_test
+wandb: false
+
+checkpoint_path: "outputs/hrnet_w44_1280_optimal_fold4/checkpoints/epoch=17-step=23544.ckpt"

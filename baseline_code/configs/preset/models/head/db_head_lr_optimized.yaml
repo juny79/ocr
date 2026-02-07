@@ -12,7 +12,7 @@ models:
     bias: False
     smooth: False
     postprocess:
-      thresh: 0.29           # ✅ 최적값 (96.53%) ⭐ NEW
-      box_thresh: 0.25       # ✅ 최적값 (96.53%)
-      max_candidates: 600
-      use_polygon: False
+      thresh: 0.24             # Lowered to improve Recall
+      box_thresh: 0.27        # Lowered to capture more TP
+      max_candidates: 500    # Teammate setting
+      use_polygon: True      # POLY mode (CLEval compatible) ⭐
