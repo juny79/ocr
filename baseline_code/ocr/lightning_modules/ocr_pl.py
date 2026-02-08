@@ -120,6 +120,12 @@ class OCRPLModule(pl.LightningModule):
         return pred
 
     def on_predict_epoch_end(self):
+        # For grid-search / analysis flows, we sometimes want to keep predictions
+        # in-memory (no JSON export, no clearing) so the caller can post-process
+        # them (e.g., k-fold ensembling on validation).
+        if bool(getattr(self.config, "disable_predict_export", False)):
+            return
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         submission_file = Path(f"{self.config.submission_dir}") / f"{timestamp}.json"
         submission_file.parent.mkdir(parents=True, exist_ok=True)
