@@ -1,0 +1,15 @@
+# @package _global_
+
+# HRNet-W44 1024x1024 Preset
+# Based on hrnet_w44_hybrid.yaml (proven working)
+# Resolution: 1024x1024, Epochs: 40, LR: 0.001
+
+defaults:
+  - base
+  - /preset/datasets/db_augmented_1024
+  - /preset/models/model_hrnet_w44_hybrid_1024
+  - /preset/lightning_modules/base
+  - _self_
+
+exp_name: hrnet_w44_1024
+seed: 42

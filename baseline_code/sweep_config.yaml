@@ -1,0 +1,22 @@
+program: runners/train.py
+method: random
+metric:
+  goal: maximize
+  name: val/hmean
+parameters:
+  preset:
+    value: hrnet_w44_1024
+  trainer.max_epochs:
+    value: 20
+  models.optimizer.lr:
+    distribution: log_uniform_values
+    min: 0.0003
+    max: 0.002
+  models.optimizer.weight_decay:
+    distribution: log_uniform_values
+    min: 0.00004
+    max: 0.0002
+  models.scheduler.T_max:
+    values: [15, 18, 20, 25]
+  wandb:
+    value: True

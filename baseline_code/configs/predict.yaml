@@ -5,7 +5,7 @@ defaults:
   - override hydra/job_logging: disabled
 
 seed: 42
-exp_name: "ocr_training"
+exp_name: "hrnet_w44_1024_submission"
 
-checkpoint_path: "outputs/hrnet_w44_1280_fold0/checkpoints/epoch=14-step=24540.ckpt"
+checkpoint_path: "outputs/hrnet_w44_1024/checkpoints/epoch=18-step=15542.ckpt"
 minified_json: False

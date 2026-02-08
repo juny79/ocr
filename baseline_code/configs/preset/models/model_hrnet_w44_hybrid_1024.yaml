@@ -1,0 +1,23 @@
+# @package _global_
+
+# HRNet-W44 1024x1024 Model Configuration
+# Based on model_hrnet_w44_hybrid.yaml (proven working)
+# Option B: lr=0.001 (fast exploration), T_max=20 (proven cosine cycle)
+
+defaults:
+  - /preset/models/decoder/unet_hrnet_w44
+  - /preset/models/encoder/timm_backbone_hrnet_w44
+  - /preset/models/head/db_head_lr_optimized
+  - /preset/models/loss/db_loss
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.001
+    weight_decay: 0.00008
+    betas: [0.9, 0.999]
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 20
+    eta_min: 0.000008

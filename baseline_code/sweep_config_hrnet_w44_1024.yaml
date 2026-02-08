@@ -1,0 +1,51 @@
+# WandB Sweep Configuration for HRNet-W44 1024px
+# Optimize: lr, weight_decay, T_max for best val/hmean
+
+project: hrnet-w44-1024-sweep
+name: hrnet_w44_1024_hyperopt
+method: bayes  # Bayesian optimization
+metric:
+  name: val/hmean
+  goal: maximize
+
+# Program configuration
+program: runners/train.py
+command:
+  - ${env}
+  - python
+  - ${program}
+  - preset=hrnet_w44_1024
+  - trainer.max_epochs=20
+  - wandb=True
+  - ${args_json}
+
+parameters:
+  # Learning Rate (base: 0.001)
+  models.optimizer.lr:
+    distribution: log_uniform_values
+    min: 0.0003
+    max: 0.002
+  
+  # Weight Decay (base: 0.00008)
+  models.optimizer.weight_decay:
+    distribution: log_uniform_values
+    min: 0.00005
+    max: 0.0002
+  
+  # Cosine Scheduler T_max (base: 20)
+  models.scheduler.T_max:
+    distribution: categorical
+    values: [15, 18, 20, 25, 30]
+  
+  # Early Stopping Patience (base: 5)
+  trainer.early_stopping_patience:
+    distribution: categorical
+    values: [3, 5, 7]
+
+# Sweep execution config
+count: 15  # Number of runs
+early_terminate:
+  type: hyperband
+  s: 5
+  eta: 3
+  max_iter: 10
