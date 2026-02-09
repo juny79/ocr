@@ -1,0 +1,30 @@
+# @package _global_
+
+# HRNet-W44 1024x1024 Optimized Model Configuration
+# Based on 0.9886 score parameters
+# 
+# Key Changes:
+# - Optimizer: Adam → AdamW
+# - LR: 0.001 → 0.0013358832166152786
+# - Weight Decay: 0.00008 → 0.0003571900294890783
+# - T_max: 20 → 10
+# - Max Epochs: 20 → 13
+# - Batch Size: 4 → 2
+
+defaults:
+  - /preset/models/decoder/unet_hrnet_w44_optimized
+  - /preset/models/encoder/timm_backbone_hrnet_w44
+  - /preset/models/head/db_head_optimized
+  - /preset/models/loss/db_loss_optimized
+  - _self_
+
+models:
+  optimizer:
+    _target_: torch.optim.AdamW           # Changed to AdamW
+    lr: 0.0013358832166152786             # Optimized learning rate
+    weight_decay: 0.0003571900294890783   # Optimized weight decay
+    betas: [0.9, 0.999]
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 10                             # Reduced to 10 epochs
+    eta_min: 0.000008

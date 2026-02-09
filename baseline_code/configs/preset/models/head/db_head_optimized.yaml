@@ -1,0 +1,18 @@
+# @package _global_
+
+# DBNet Head with Optimized Postprocessing
+# Based on 0.9886 score configuration
+
+models:
+  head:
+    _target_: ${head_path}.DBHead
+    in_channels: 256
+    upscale: 4
+    k: 50
+    bias: False
+    smooth: False
+    postprocess:
+      thresh: 0.23105253214239585              # Optimized threshold
+      box_thresh: 0.4324259445084524           # Optimized box threshold
+      max_candidates: 500
+      use_polygon: true                        # POLY mode (CLEval compatible)

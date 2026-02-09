@@ -1,0 +1,17 @@
+# @package _global_
+
+# Optimized DBLoss Configuration
+# Based on 0.9886 score configuration
+# negative_ratio: 2.824132345320219
+# prob_map_loss_weight: 3.591196851512631
+# thresh_map_loss_weight: 8.028627860143937
+# binary_map_loss_weight: 0.6919312670387725
+
+models:
+  loss:
+    _target_: ${loss_path}.DBLoss
+    negative_ratio: 2.824132345320219        # Optimized negative ratio
+    eps: 1e-6
+    prob_map_loss_weight: 3.591196851512631  # Optimized prob weight
+    thresh_map_loss_weight: 8.028627860143937 # Optimized thresh weight
+    binary_map_loss_weight: 0.6919312670387725 # Optimized binary weight

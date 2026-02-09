@@ -1,0 +1,22 @@
+# @package _global_
+
+# HRNet-W44 1024x1024 with External Data (SROIE + CORD-v2)
+# Optimized preset + External datasets
+
+defaults:
+  - base
+  - datasets/db_augmented_external_1024      # 외부 데이터 포함 데이터셋
+  - models/model_hrnet_w44_optimized_1024    # 최적화된 모델
+  - lightning_modules/base
+  - _self_
+
+exp_name: hrnet_w44_external_1024
+seed: 42
+
+# WandB 설정
+wandb: true
+wandb_config:
+  project: "hrnet-w44-1024-sweep"
+  entity: "quriquri7"
+  tags: ["hrnet_w44", "external_data", "sroie", "cord-v2", "1024px", "optimized"]
+  notes: "HRNet-W44 with SROIE + CORD-v2 external datasets"

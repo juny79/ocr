@@ -1,0 +1,22 @@
+# @package _global_
+
+# HRNet-W44 1024x1024 Optimized Preset
+# Based on 0.9886 score configuration
+# Target: Surpass current 0.9837 leaderboard score
+#
+# Key Optimizations:
+# 1. Optimizer: AdamW with optimized LR and WD
+# 2. Shorter training: 13 epochs with T_max=10
+# 3. Optimized loss weights and postprocessing thresholds
+# 4. Batch size 2 for better gradient quality
+# 5. Enhanced Brightness&Contrast augmentation
+
+defaults:
+  - base
+  - datasets/db_augmented_optimized_1024
+  - models/model_hrnet_w44_optimized_1024
+  - lightning_modules/base
+  - _self_
+
+exp_name: hrnet_w44_optimized_1024
+seed: 42

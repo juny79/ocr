@@ -1,8 +1,13 @@
 # @package _global_
 
-# HRNet-W44 1024x1024 Dataset Configuration
-# Based on db_augmented_resnet50.yaml structure (proven working)
-# Resolution: 1024x1024
+# HRNet-W44 1024x1024 Optimized Dataset Configuration
+# Based on 0.9886 score parameters
+# 
+# Key Changes:
+# - Batch Size: 4 → 2
+# - CollateFN shrink_ratio: 0.4 → 0.428584820771695
+# - CollateFN thresh_max: 0.7 → 0.7506908133484191
+# - CollateFN thresh_min: 0.3 → 0.33967147700431666
 
 dataset_base_path: "/data/ephemeral/home/data/datasets/"
 
@@ -10,7 +15,7 @@ datasets:
   train_dataset:
     _target_: ${dataset_path}.OCRDataset
     image_path: ${dataset_base_path}images/all
-    annotation_path: ${dataset_base_path}jsons/train_augmented_full.json
+    annotation_path: ${dataset_base_path}jsons/train.json
     transform: ${transforms.train_transform}
   val_dataset:
     _target_: ${dataset_path}.OCRDataset
@@ -53,11 +58,11 @@ transforms:
         rotate_limit: 6
         border_mode: 0
         p: 0.5
-      # Color / Brightness
+      # Color / Brightness - Enhanced for Brightness&Contrast optimization
       - _target_: albumentations.RandomBrightnessContrast
-        brightness_limit: 0.2
-        contrast_limit: 0.2
-        p: 0.6
+        brightness_limit: 0.32                 # Increased based on sweep results
+        contrast_limit: 0.28                   # Increased based on sweep results
+        p: 0.7                                 # Increased probability
       - _target_: albumentations.ColorJitter
         brightness: 0.15
         contrast: 0.15
@@ -81,34 +86,29 @@ transforms:
         transforms:
           - _target_: albumentations.MotionBlur
             blur_limit: 5
+          - _target_: albumentations.MedianBlur
+            blur_limit: 5
           - _target_: albumentations.GaussianBlur
             blur_limit: 5
-        p: 0.25
-      # Enhancement
-      - _target_: albumentations.Sharpen
-        alpha: [0.2, 0.5]
-        lightness: [0.5, 1.0]
-        p: 0.4
-      - _target_: albumentations.RandomShadow
-        shadow_roi: [0, 0.5, 1, 1]
         p: 0.3
-      - _target_: albumentations.RandomFog
-        fog_coef_lower: 0.1
-        fog_coef_upper: 0.3
-        p: 0.2
-      # Flip + Normalize (ToTensorV2 is auto-added by DBTransforms)
+      # Shadow / Weather
+      - _target_: albumentations.RandomShadow
+        num_shadows_lower: 1
+        num_shadows_upper: 2
+        shadow_dimension: 4
+        shadow_roi: [0, 0.4, 1, 1]
+        p: 0.3
+      # Flip
       - _target_: albumentations.HorizontalFlip
         p: 0.5
-      - _target_: albumentations.Normalize
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
     keypoint_params:
       _target_: albumentations.KeypointParams
-      format: 'xy'
+      format: xy
       remove_invisible: True
 
   val_transform:
     _target_: ${dataset_path}.DBTransforms
+    _convert_: all
     transforms:
       - _target_: albumentations.LongestMaxSize
         max_size: 1024
@@ -118,16 +118,14 @@ transforms:
         min_height: 1024
         border_mode: 0
         p: 1.0
-      - _target_: albumentations.Normalize
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
     keypoint_params:
       _target_: albumentations.KeypointParams
-      format: 'xy'
+      format: xy
       remove_invisible: True
 
   test_transform:
     _target_: ${dataset_path}.DBTransforms
+    _convert_: all
     transforms:
       - _target_: albumentations.LongestMaxSize
         max_size: 1024
@@ -137,34 +135,50 @@ transforms:
         min_height: 1024
         border_mode: 0
         p: 1.0
-      - _target_: albumentations.Normalize
-        mean: [0.485, 0.456, 0.406]
-        std: [0.229, 0.224, 0.225]
     keypoint_params:
       _target_: albumentations.KeypointParams
-      format: 'xy'
+      format: xy
       remove_invisible: True
 
 dataloaders:
   train_dataloader:
-    batch_size: 4
+    batch_size: 2                          # Optimized batch size (reduced from 4)
     shuffle: True
     num_workers: 4
+    pin_memory: True
+    drop_last: True
+    collate_fn:
+      _target_: ${collate_fn_path}.DBCollateFN
+      shrink_ratio: 0.428584820771695      # Optimized shrink ratio
+      thresh_min: 0.33967147700431666      # Optimized thresh_min
+      thresh_max: 0.7506908133484191       # Optimized thresh_max
   val_dataloader:
-    batch_size: 4
+    batch_size: 2                          # Matched with train
     shuffle: False
     num_workers: 4
+    pin_memory: True
+    collate_fn:
+      _target_: ${collate_fn_path}.DBCollateFN
+      shrink_ratio: 0.428584820771695      # Optimized shrink ratio
+      thresh_min: 0.33967147700431666      # Optimized thresh_min
+      thresh_max: 0.7506908133484191       # Optimized thresh_max
   test_dataloader:
-    batch_size: 4
+    batch_size: 2                          # Matched with train
     shuffle: False
     num_workers: 4
+    pin_memory: True
+    collate_fn:
+      _target_: ${collate_fn_path}.DBCollateFN
+      shrink_ratio: 0.428584820771695      # Optimized shrink ratio
+      thresh_min: 0.33967147700431666      # Optimized thresh_min
+      thresh_max: 0.7506908133484191       # Optimized thresh_max
   predict_dataloader:
-    batch_size: 1
+    batch_size: 2                          # Matched with train
     shuffle: False
     num_workers: 4
-
-collate_fn:
-  _target_: ${dataset_path}.DBCollateFN
-  shrink_ratio: 0.4
-  thresh_min: 0.3
-  thresh_max: 0.7
+    pin_memory: True
+    collate_fn:
+      _target_: ${collate_fn_path}.DBCollateFN
+      shrink_ratio: 0.428584820771695      # Optimized shrink ratio
+      thresh_min: 0.33967147700431666      # Optimized thresh_min
+      thresh_max: 0.7506908133484191       # Optimized thresh_max
