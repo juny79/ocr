@@ -1,0 +1,112 @@
+# WandB Sweep Configuration - External Data + K-Fold Ready
+# Dataset: 4,698 images (SROIE 626 + CORD-v2 800 + Original 3,272)
+# Target: Find optimal hyperparameters before K-Fold training
+
+project: hrnet-w44-1024-sweep
+
+program: runners/train.py
+method: bayes  # Bayesian optimization
+metric:
+  name: val/hmean
+  goal: maximize
+
+# Early termination
+early_terminate:
+  type: hyperband
+  min_iter: 8
+  eta: 2
+
+parameters:
+  # Fixed parameters
+  preset:
+    value: hrnet_w44_1024
+  exp_name:
+    value: hrnet_w44_sweep_external
+  wandb:
+    value: true
+  trainer.max_epochs:
+    value: 13
+  
+  # Dataset override - use external data
+  datasets.train_dataset.annotation_path:
+    value: /data/ephemeral/home/data/datasets/jsons/train_augmented_full.json
+  
+  # Critical hyperparameters for optimization
+  
+  # Learning Rate
+  models.optimizer.lr:
+    distribution: log_uniform_values
+    min: 0.0008
+    max: 0.0020
+  
+  # Weight Decay
+  models.optimizer.weight_decay:
+    distribution: log_uniform_values
+    min: 0.0001
+    max: 0.0008
+  
+  # Scheduler T_max
+  models.scheduler.T_max:
+    values: [8, 10, 12, 15]
+  
+  # Scheduler eta_min
+  models.scheduler.eta_min:
+    distribution: log_uniform_values
+    min: 0.000001
+    max: 0.00001
+  
+  # Batch Size
+  dataloader.batch_size:
+    values: [2, 3, 4]
+  
+  # Postprocessing - Threshold
+  models.head.postprocess.thresh:
+    distribution: uniform
+    min: 0.18
+    max: 0.28
+  
+  # Postprocessing - Box Threshold
+  models.head.postprocess.box_thresh:
+    distribution: uniform
+    min: 0.35
+    max: 0.50
+  
+  # Loss weights
+  models.loss.negative_ratio:
+    distribution: uniform
+    min: 2.0
+    max: 4.0
+  
+  models.loss.prob_map_loss_weight:
+    distribution: uniform
+    min: 2.0
+    max: 5.0
+  
+  models.loss.thresh_map_loss_weight:
+    distribution: uniform
+    min: 6.0
+    max: 10.0
+  
+  models.loss.binary_map_loss_weight:
+    distribution: uniform
+    min: 0.5
+    max: 1.5
+  
+  # CollateFN parameters
+  collate_fn.shrink_ratio:
+    distribution: uniform
+    min: 0.3
+    max: 0.5
+  
+  collate_fn.thresh_min:
+    distribution: uniform
+    min: 0.2
+    max: 0.4
+  
+  collate_fn.thresh_max:
+    distribution: uniform
+    min: 0.6
+    max: 0.85
+
+# Run configuration
+run_cap: 30  # Maximum 30 runs

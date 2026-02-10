@@ -1,7 +1,7 @@
 # WandB Sweep Configuration for HRNet-W44 1024px
 # Optimize: lr, weight_decay, T_max for best val/hmean
 
-project: hrnet-w44-1024-sweep
+project: hrnet-w44-1024-kfold
 name: hrnet_w44_1024_hyperopt
 method: bayes  # Bayesian optimization
 metric:

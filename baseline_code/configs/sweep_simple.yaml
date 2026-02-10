@@ -1,0 +1,28 @@
+program: runners/train.py
+method: bayes
+entity: fc_bootcamp
+project: hrnet-w44-1024-kfold
+metric:
+  goal: maximize
+  name: val/hmean
+parameters:
+  preset:
+    value: hrnet_w44_1024
+  trainer.max_epochs:
+    value: 13
+  datasets.train_dataset.annotation_path:
+    value: /data/ephemeral/home/data/datasets/jsons/train_augmented_full.json
+  models.optimizer.lr:
+    min: 0.0008
+    max: 0.0020
+  models.optimizer.weight_decay:
+    min: 0.0001
+    max: 0.0008
+  models.scheduler.T_max:
+    values: [8, 10, 12]
+  models.head.postprocess.thresh:
+    min: 0.20
+    max: 0.26
+  models.head.postprocess.box_thresh:
+    min: 0.38
+    max: 0.48

@@ -1,0 +1,35 @@
+# Optimal Hyperparameters from WandB Sweep
+# Run ID: dusi9e8b (Best Performance: Val H-Mean 0.97712)
+# Date: 2026-02-10
+
+models:
+  optimizer:
+    lr: 0.000974            # Learning Rate (optimal range: 0.0009-0.0010)
+    weight_decay: 0.000146  # L2 Regularization (optimal range: 0.00014-0.00015)
+  
+  scheduler:
+    T_max: 12               # Cosine Annealing Period (Epochs - 1)
+  
+  head:
+    postprocess:
+      thresh: 0.229         # Probability Map Threshold (for high precision)
+      box_thresh: 0.400     # Box Confidence Threshold
+
+trainer:
+  max_epochs: 13            # Training Epochs
+
+# Alternative Configuration (High Recall Priority)
+# Run ID: 2vayr7k4 (Val H-Mean 0.97589)
+# 
+# models:
+#   optimizer:
+#     lr: 0.001058
+#     weight_decay: 0.000141
+#   scheduler:
+#     T_max: 13
+#   head:
+#     postprocess:
+#       thresh: 0.207       # Lower threshold for higher recall
+#       box_thresh: 0.417
+# trainer:
+#   max_epochs: 15
