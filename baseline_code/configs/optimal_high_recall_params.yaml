@@ -1,0 +1,63 @@
+# High Recall Strategy Configuration
+# Prioritizes recall to minimize false negatives
+# Expected: Recall 0.98+, Precision 0.98+, H-Mean 0.985+
+
+defaults:
+  - _self_
+  - preset: hrnet_w44_1024
+
+seed: 42
+exp_name: "optimal_high_recall"
+
+# Dataset configuration
+datasets:
+  batch_size: 1
+  num_workers: 4
+
+# Optimizer - Slightly higher LR for better recall
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 0.001350                    # Slightly higher than optimal
+  weight_decay: 0.000380          # Higher regularization
+  betas: [0.9, 0.999]
+  eps: 1e-08
+
+# Learning rate scheduler
+lr_scheduler:
+  _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+  T_max: 12
+  eta_min: 0
+
+# Training configuration
+training:
+  max_epochs: 13
+  precision: 16
+  accumulate_grad_batches: 1
+
+# Model postprocessing - Tuned for high recall
+models:
+  head:
+    postprocess:
+      thresh: 0.210                # ⭐ Lower threshold → More detections
+      box_thresh: 0.420            # ⭐ Higher box threshold → Better recall
+      min_area: 80                 # Lower min area → Catch small text
+      max_candidates: 1200         # More candidates
+
+# Callbacks
+callbacks:
+  model_checkpoint:
+    monitor: "val/hmean"
+    mode: "max"
+    save_top_k: 3
+    save_last: true
+  
+  early_stopping:
+    monitor: "val/recall"          # Focus on recall
+    patience: 5
+    mode: "max"
+
+# Logging
+logger:
+  project: "ocr-optimal"
+  name: "optimal_high_recall"
+  tags: ["recall-optimized", "production"]

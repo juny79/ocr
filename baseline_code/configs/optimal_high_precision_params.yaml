@@ -1,0 +1,63 @@
+# High Precision Strategy Configuration
+# Prioritizes precision to minimize false positives
+# Expected: Precision 0.99+, Recall 0.975+, H-Mean 0.982+
+
+defaults:
+  - _self_
+  - preset: hrnet_w44_1024
+
+seed: 42
+exp_name: "optimal_high_precision"
+
+# Dataset configuration
+datasets:
+  batch_size: 1
+  num_workers: 4
+
+# Optimizer - Conservative for high precision
+optimizer:
+  _target_: torch.optim.Adam
+  lr: 0.001250                    # Slightly lower than optimal
+  weight_decay: 0.000330          # Maintain regularization
+  betas: [0.9, 0.999]
+  eps: 1e-08
+
+# Learning rate scheduler
+lr_scheduler:
+  _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+  T_max: 12
+  eta_min: 0
+
+# Training configuration
+training:
+  max_epochs: 13
+  precision: 16
+  accumulate_grad_batches: 1
+
+# Model postprocessing - Tuned for high precision
+models:
+  head:
+    postprocess:
+      thresh: 0.220                # ⭐ Higher threshold → Stricter filtering
+      box_thresh: 0.410            # ⭐ Lower box threshold → Conservative
+      min_area: 120                # Higher min area → Filter noise
+      max_candidates: 800          # Fewer but more confident candidates
+
+# Callbacks
+callbacks:
+  model_checkpoint:
+    monitor: "val/hmean"
+    mode: "max"
+    save_top_k: 3
+    save_last: true
+  
+  early_stopping:
+    monitor: "val/precision"       # Focus on precision
+    patience: 5
+    mode: "max"
+
+# Logging
+logger:
+  project: "ocr-optimal"
+  name: "optimal_high_precision"
+  tags: ["precision-optimized", "production"]

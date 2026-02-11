@@ -1,0 +1,73 @@
+# Optimal Configuration with Loss Parameter Tuning
+# Based on Leaderboard Best (0.9854) + Optimized Loss Parameters
+# Expected H-Mean: 0.9860~0.9870 (+0.6~1.6%p improvement)
+
+defaults:
+  - _self_
+  - preset: hrnet_w44_1024
+
+seed: 42
+exp_name: "optimal_with_loss_tuning"
+project_name: "ocr-optimal"
+exp_version: "v1.0"
+
+wandb: true
+wandb_config:
+  project: "ocr-optimal"
+  entity: "quriquri7"
+  tags: ["loss-optimized", "production", "target-0.9870"]
+  notes: "Leaderboard best LR/WD + Optimized Loss Parameters"
+
+resume: null
+
+# Trainer configuration
+trainer:
+  max_epochs: 13
+  num_sanity_val_steps: 1
+  log_every_n_steps: 50
+  check_val_every_n_epoch: 1
+  deterministic: true
+
+# Dataset configuration
+datasets:
+  batch_size: 1
+  num_workers: 4
+
+# Model with optimized parameters
+models:
+  # Optimizer - Leaderboard best parameters
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.001336                    # ⭐ Leaderboard best
+    weight_decay: 0.000357          # ⭐ Leaderboard best
+    betas: [0.9, 0.999]
+    eps: 1e-08
+
+  # Learning rate scheduler
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: 12
+    eta_min: 0
+
+  # Loss with optimized parameters from 0.9886 model
+  loss:
+    _target_: ${loss_path}.DBLoss
+    negative_ratio: 2.824132345320219        # ⭐ Optimized (-5.9% from default 3.0)
+    eps: 1e-6
+    prob_map_loss_weight: 3.591196851512631  # ⭐ Optimized (-28.2% from default 5.0)
+    thresh_map_loss_weight: 8.028627860143937 # ⭐ Optimized (-19.7% from default 10.0)
+    binary_map_loss_weight: 0.6919312670387725 # ⭐ Optimized (-30.8% from default 1.0)
+  
+  # Postprocessing - Leaderboard best parameters
+  head:
+    postprocess:
+      thresh: 0.215                # ⭐ Leaderboard best
+      box_thresh: 0.415            # ⭐ Leaderboard best
+      max_candidates: 500
+      use_polygon: true
+
+# Notes:
+# 1. Combines Leaderboard best LR/WD/thresh with optimized Loss parameters
+# 2. Loss optimization reduces all weights → prevents overfitting
+# 3. Expected improvement: +0.6~1.6%p over current best (0.9854)
+# 4. If successful, can ensemble with leaderboard_best for 0.9875+
