@@ -16,3 +16,4 @@ models:
       box_thresh: 0.4324259445084524           # Optimized box threshold
       max_candidates: 500
       use_polygon: true                        # POLY mode (CLEval compatible)
+      unclip_ratio: 2.0                        # Polygon unclip ratio (default)

@@ -94,12 +94,12 @@ def nms_boxes(boxes, iou_threshold=0.5):
     # Sort by score (how many folds predicted this box)
     sorted_indices = sorted(box_scores.keys(), key=lambda x: box_scores[x], reverse=True)
     
-    # FILTERING: Keep boxes with at least 3 votes (Strict Majority)
-    # 2 votes was good (0.9176), but let's try 3 votes to boost precision further.
+    # FILTERING: Keep boxes with at least 2 votes (40% agreement)
+    # 2 votes was good (0.9176), 3 votes gave low recall (0.68).
     
-    final_indices = [idx for idx in sorted_indices if box_scores[idx] >= 3]
+    final_indices = [idx for idx in sorted_indices if box_scores[idx] >= 2]
     
-    print(f"  Removed {len(sorted_indices) - len(final_indices)} low-confidence boxes (votes < 3)")
+    print(f"  Removed {len(sorted_indices) - len(final_indices)} low-confidence boxes (votes < 2)")
     
     # Return boxes sorted by confidence
     return [unique_boxes[idx] for idx in final_indices]

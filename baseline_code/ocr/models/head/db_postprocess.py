@@ -20,12 +20,13 @@ import torch
 
 
 class DBPostProcessor:
-    def __init__(self, thresh=0.3, box_thresh=0.7, max_candidates=1000, use_polygon=False):
+    def __init__(self, thresh=0.3, box_thresh=0.7, max_candidates=1000, use_polygon=False, unclip_ratio=2.0):
         self.min_size = 3                       # minimum size of text region
         self.thresh = thresh                    # threshold for binarization
         self.box_thresh = box_thresh            # threshold for text region proposals
         self.max_candidates = max_candidates    # max number of text region proposals
         self.use_polygon = use_polygon          # use polygon or box
+        self.unclip_ratio = unclip_ratio        # unclip ratio for polygon expansion
 
     def represent(self, batch, _pred):
         """
@@ -137,7 +138,7 @@ class DBPostProcessor:
 
             # Unclip the box
             if points.shape[0] > 2:
-                box = self.unclip(points, unclip_ratio=2.0)
+                box = self.unclip(points, unclip_ratio=self.unclip_ratio)
                 if box is None:
                     continue
             else:
@@ -197,7 +198,7 @@ class DBPostProcessor:
                 continue
 
             # Unclip the box
-            box = self.unclip(points).reshape(-1, 1, 2)
+            box = self.unclip(points, unclip_ratio=self.unclip_ratio).reshape(-1, 1, 2)
             box, sside = self.get_mini_boxes(box)
             if sside < self.min_size + 2:
                 continue

@@ -16,3 +16,4 @@ models:
       box_thresh: 0.27        # Lowered to capture more TP
       max_candidates: 500    # Teammate setting
       use_polygon: True      # POLY mode (CLEval compatible) ⭐
+      unclip_ratio: 2.0      # Polygon unclip ratio (default)
